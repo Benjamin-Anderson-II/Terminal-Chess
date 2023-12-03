@@ -11,27 +11,27 @@ class Horse(Tile):
     p_type = 'h'
 
     
-    def project(self, board):
-        if(self.check(self.x+2, self.y-1, board)):
-            self.highlight_tile(self.x+2, self.y-1, board)
+    def project(self, board, mv = True):
+        if(self.check(self.x, self.y, self.x+2, self.y-1, board, mv)):
+            self.highlight_tile(self.x+2, self.y-1, board, mv)
 
-        if(self.check(self.x+1, self.y-2, board)):
-            self.highlight_tile(self.x+1, self.y-2, board)
+        if(self.check(self.x, self.y, self.x+1, self.y-2, board, mv)):
+            self.highlight_tile(self.x+1, self.y-2, board, mv)
 
-        if(self.check(self.x-1, self.y-2, board)):
-            self.highlight_tile(self.x-1, self.y-2, board)
+        if(self.check(self.x, self.y, self.x-1, self.y-2, board, mv)):
+            self.highlight_tile(self.x-1, self.y-2, board, mv)
 
-        if(self.check(self.x-2, self.y-1, board)):
-            self.highlight_tile(self.x-2, self.y-1, board)
+        if(self.check(self.x, self.y, self.x-2, self.y-1, board, mv)):
+            self.highlight_tile(self.x-2, self.y-1, board, mv)
 
-        if(self.check(self.x-2, self.y+1, board)):
-            self.highlight_tile(self.x-2, self.y+1, board)
+        if(self.check(self.x, self.y, self.x-2, self.y+1, board, mv)):
+            self.highlight_tile(self.x-2, self.y+1, board, mv)
 
-        if(self.check(self.x-1, self.y+2, board)):
-            self.highlight_tile(self.x-1, self.y+2, board)
+        if(self.check(self.x, self.y, self.x-1, self.y+2, board, mv)):
+            self.highlight_tile(self.x-1, self.y+2, board, mv)
 
-        if(self.check(self.x+1, self.y+2, board)):
-            self.highlight_tile(self.x+1, self.y+2, board)
+        if(self.check(self.x, self.y, self.x+1, self.y+2, board, mv)):
+            self.highlight_tile(self.x+1, self.y+2, board, mv)
 
-        if(self.check(self.x+2, self.y+1, board)):
-            self.highlight_tile(self.x+2, self.y+1, board)
+        if(self.check(self.x, self.y, self.x+2, self.y+1, board, mv)):
+            self.highlight_tile(self.x+2, self.y+1, board, mv)
