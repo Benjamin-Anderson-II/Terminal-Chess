@@ -2,4 +2,4 @@ __pycache__/
 *.py[cod]
 *.sh
 cursor_test.py
-tui-client.py
+tui_client.py
