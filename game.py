@@ -92,7 +92,7 @@ class Game:
             win_y = tile_size-1
         else:
             txt_col = "K"
-            win_y = tile_size * 7 - 1
+            win_y = tile_size * 6 - 1
         choose_win = api.create_window(self.socket, 
                                        win_x, 
                                        win_y, 
@@ -127,13 +127,13 @@ class Game:
                 curr_btn = api.search_button(self.socket, "+x")
             elif key == keys.ENTER:
                 if curr_btn == rook_btn:
-                    self.board[self.cursor_y][self.cursor_x] = Rook(self.cursor_x, self.cursor_y, True)
+                    self.board[self.cursor_y][self.cursor_x] = Rook(self.cursor_x, self.cursor_y, is_white)
                 elif curr_btn == knight_btn:
-                    self.board[self.cursor_y][self.cursor_x] = Horse(self.cursor_x, self.cursor_y, True)
+                    self.board[self.cursor_y][self.cursor_x] = Horse(self.cursor_x, self.cursor_y, is_white)
                 elif curr_btn == bishop_btn:
-                    self.board[self.cursor_y][self.cursor_x] = Bishop(self.cursor_x, self.cursor_y, True)
+                    self.board[self.cursor_y][self.cursor_x] = Bishop(self.cursor_x, self.cursor_y, is_white)
                 elif curr_btn == queen_btn:
-                    self.board[self.cursor_y][self.cursor_x] = Queen(self.cursor_x, self.cursor_y, True)
+                    self.board[self.cursor_y][self.cursor_x] = Queen(self.cursor_x, self.cursor_y, is_white)
                 api.exit_window(self.socket, choose_win)
                 self.print_board()
                 break

@@ -20,8 +20,8 @@ def create_button(soc, x = 1, y = 1, txt = "Button", txt_col = "0",
                   bg_col = "0", pad = 1):
     send = "B;%dp;%dx;%dy;{%s};%sb%sf" % (pad,
                                           x, y, txt,
-                                          txt_col,
-                                          bg_col)
+                                          bg_col,
+                                          txt_col)
 
     return _send_and_recv(soc, send)
 
