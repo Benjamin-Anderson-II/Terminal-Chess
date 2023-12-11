@@ -115,8 +115,10 @@ def mk_btn(fg, bg):
     s += f"\033[{box_h}A"
 
     #make forground
+    if btn_pad != 0:
+        s += "\033[%dB\033[%dC" % (btn_pad, btn_pad * 2)
     for t in btn_txt:
-        s += "\033[%dC%s\033[%dD\033[1B" % (btn_pad, t, btn_pad + len(t) + 1)
+            s += "%s\033[%dD\033[1B" % (t, len(t))
 
     #go back to start of btn_txt
     s += f"\033[{len(btn_txt)}D"
@@ -240,7 +242,7 @@ def search(data):
     for d in data:
         if d[-1] == "}":
             for i in range(len(buttons)):
-                if buttons[i].txt == d[1:-1]:
+                if buttons[i].txt == d[1:-1].split('\n'):
                     return i
         elif d == "+y":
             return get_closest_btn(buttons, curr_btn, lambda y: y<=0, math.pi/2, -1)

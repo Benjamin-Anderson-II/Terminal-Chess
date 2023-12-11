@@ -124,9 +124,9 @@ class Game:
         choose_win = api.create_window(self.socket, 
                                        win_x, 
                                        win_y, 
-                                       tile_size*8+8, 
+                                       tile_size*8+7, 
                                        tile_size+6, 
-                                       prompt = "Promotion!!", 
+                                       prompt = " \n \n    Promotion!!", 
                                        win_bg_col = "B",
                                        hgl_txt_col = txt_col,
                                        hgl_bg_col = "R",
@@ -147,6 +147,7 @@ class Game:
                                       5 + tile_size*2*3, 6,
                                       queen_txt,
                                       txt_col, "G", 0)
+        curr_btn = api.search_button(self.socket, "{%s}" % (rook_txt))
         while(1):
             key = getkey()
             if   key == keys.LEFT:
@@ -163,6 +164,7 @@ class Game:
                 elif curr_btn == queen_btn:
                     self.board[self.cursor_y][self.cursor_x] = Queen(self.cursor_x, self.cursor_y, is_white)
                 api.exit_window(self.socket, choose_win)
+                self.board[self.cursor_y][self.cursor_x].selected = True
                 self.print_board()
                 break
 
@@ -246,6 +248,25 @@ class Game:
                           parent_win = self.controls_win)
 
 
+    def verification_win(self):
+        w = api.create_window(self.socket,
+                              x = Tile.size*6+1,
+                              y = 5+Tile.size*3,
+                              win_wid = Tile.size*4,
+                              win_hgt = Tile.size,
+                              prompt = "Are you sure?",
+                              p_txt_col = "Y",
+                              win_bg_col = "B",
+                              hgl_txt_col = "K",
+                              hgl_bg_col = "G")
+        y_pos = api.create_button(self.socket,
+                                  x = 5, y = 3, txt = "Yes", 
+                                  txt_col = "K", bg_col = "W", pad = 1)
+        n_pos = api.create_button(self.socket,
+                                  x = 13, y = 3, txt = "No", 
+                                  txt_col = "K", bg_col = "W", pad = 1)
+        return w, y_pos, n_pos
+
     # Pre: Game is created and no modifications have been made to the object
     def play(self):
         curr_player_is_white = True
@@ -278,8 +299,21 @@ class Game:
                     continue
                 projection_tile = self.select("RIGHT")
             elif key == 'r':
-                self.game_over_win(not curr_player_is_white)
-                break
+                win_id, yes_pos, no_pos = self.verification_win()
+                curr_pos = api.search_button(self.socket, "-x")
+                while(1):
+                    k = getkey()
+                    if k == keys.ENTER:
+                        api.exit_window(self.socket, win_id)
+                        self.print_board()
+                        break
+                    elif k == keys.LEFT:
+                        curr_pos = api.search_button(self.socket, "-x")
+                    elif k == keys.RIGHT:
+                        curr_pos = api.search_button(self.socket, "+x")
+                if(curr_pos == yes_pos):
+                    self.game_over_win(not curr_player_is_white)
+                    break
             elif key == keys.ENTER:
                 # Projection Logic
                 curr_tile = self.board[self.cursor_y][self.cursor_x]
@@ -339,8 +373,5 @@ press R to Resign
 
 
 #TODO:
-# Implement Castling
 # Implement En Passant
 # Implement Menus via 'h' & 'r'
-# Keep Track of captures
-# Let player know when they have lost / won
