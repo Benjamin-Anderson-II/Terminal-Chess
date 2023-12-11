@@ -180,7 +180,7 @@ def mk_win():
 
     # Set Text Box Position
     if w.v_align == "T":
-        s += "\033[%dH" % (w.y+1)
+        s += "\033[%dH" % (w.y)
     elif w.v_align == "C":
         s += "\033[%dH" % ((w.y) + (w.win_height / 2) - (len(w.txt) / 2))
     elif w.v_align == "B":
@@ -193,7 +193,6 @@ def mk_win():
     elif w.h_align == "R":
         s += "\033[%dC" % (w.x + w.win_width - w.len(w.txt[0]) - 1)
 
-#"\033[%dC%s\033[1B\033[%dD" % ((w.txt_width - len(t)) / 2 - 1, t, len(t) + ((w.txt_width - len(t)) / 2 - 1))
     # Put in Text
     for t in w.txt:
         offset = 0

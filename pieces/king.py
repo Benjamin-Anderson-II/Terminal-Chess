@@ -43,3 +43,15 @@ class King(Tile):
         if(self.check(self.x, self.y, self.x+1, self.y+1, board, mv)):
             self.highlight_tile(self.x+1, self.y+1, board, mv)
 
+        if(not self.first_move): # must be king's first move
+            return None
+        if(board[self.y][self.x+3].first_move == True and # rook's first move
+               self.check(self.x, self.y, self.x+1, self.y, board, mv) and # does not pass over tiles under attack
+               self.check(self.x, self.y, self.x+2, self.y, board, mv)):
+            self.highlight_tile(self.x+2, self.y, board, mv)
+        
+        if(board[self.y][self.x-4].p_type == 'r' and board[self.y][self.x-4].first_move == True and 
+               self.check(self.x, self.y, self.x-1, self.y, board, mv) and 
+               self.check(self.x, self.y, self.x-2, self.y, board, mv) and 
+               board[self.y][self.x-3].p_type == '\0'): # space in front of rook is free
+            self.highlight_tile(self.x-2, self.y, board, mv)

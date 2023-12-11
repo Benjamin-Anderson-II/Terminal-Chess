@@ -4,6 +4,7 @@ sys.path.insert(1, "pieces")
 from getkey import getkey, keys
 
 import tui_api as api
+import qa_api as qa
 from tile import Tile
 from pawn import Pawn
 from rook import Rook
@@ -20,6 +21,7 @@ class Game:
         self.add_pieces(True)
         self.add_pieces(False)
         self.controls_win = self.print_controls()
+        self.make_material_windows(True)
         self.print_board()
 
     def highlight_curr_tile(self, h = True):
@@ -43,24 +45,50 @@ class Game:
         #self.board[self.cursor_y][self.cursor_x].selected = True
         return self.highlight_curr_tile()
 
-    def move_piece(self, proj_x, proj_y):
-        curr_tile = self.board[self.cursor_y][self.cursor_x]
+    def make_material_windows(self, first_time = False):
+        if not first_time:
+            api.exit_window(self.socket, 1)
+            api.exit_window(self.socket, 1)
+        self.white_material = api.create_window(self.socket, 1, Tile.size*8+2, 40, 1, 
+                                           prompt = qa.get_pieces(False), h_align = "L")
+        self.black_material = api.create_window(self.socket, 1, 1, 40, 1, 
+                                           prompt = qa.get_pieces(True), h_align = "L")
 
-        if curr_tile.highlight: 
+    def move_piece(self, proj_x, proj_y):
+        if self.board[self.cursor_y][self.cursor_x].highlight: 
             # unproject 
             self.board[proj_y][proj_x].project(self.board)
             
+            #call partner's microservice
+            print("\033[51H")
+            qa.add_piece(not self.board[proj_y][proj_x].is_white, 
+                         self.board[self.cursor_y][self.cursor_x].p_type)
+            # print()
+
+            ### Check if Castling
+            if (self.board[proj_y][proj_x].p_type == 'k' and 
+                (proj_x+2 == self.cursor_x or proj_x-2 == self.cursor_x)):
+                #move the rook to the other side of the king
+                mv_x = proj_x+int((self.cursor_x-proj_x)/2)
+                rk_x = 0 if mv_x<proj_x else 7
+                self.board[proj_y][rk_x].first_move = False
+                self.board[proj_y][rk_x].set_xy(mv_x, proj_y)
+                self.board[proj_y][mv_x] = self.board[proj_y][rk_x]
+                self.board[proj_y][rk_x] = Tile(rk_x, proj_y, None)
+                print(self.board[proj_y][rk_x], end = "")
+                print(self.board[proj_y][mv_x], end = "")
+
             # move piece
             self.board[self.cursor_y][self.cursor_x] = self.board[proj_y][proj_x]
-            curr_tile = self.board[self.cursor_y][self.cursor_x]
             self.board[proj_y][proj_x] = Tile(proj_x, proj_y, None)
-            curr_tile.set_xy(self.cursor_x, self.cursor_y)
-            curr_tile.selected = True
-            curr_tile.first_move = False
+            self.board[self.cursor_y][self.cursor_x].set_xy(self.cursor_x, self.cursor_y)
+            self.board[self.cursor_y][self.cursor_x].selected = True
+            self.board[self.cursor_y][self.cursor_x].first_move = False
         
             # Print Changed Tiles
             print(self.board[self.cursor_y][self.cursor_x], end = "")
             print(self.board[proj_y][proj_x], end = "")
+            self.make_material_windows()
             return True
 
         return False
@@ -176,7 +204,49 @@ class Game:
                 self.make_promote_win(rook_txt, knight_txt, bishop_txt, queen_txt, tile.is_white, tile.size)
                 return
 
-    # Pre Game is created and no modifications have been made to the object
+    def check_for_mate(self, is_white):
+        for i in self.board:
+            for tile in i:
+                if(tile.is_white == is_white and 
+                       tile.p_type != '\0'):
+                    tile.project(self.board)
+                    l = [t.highlight for j in self.board for t in j]
+                    tile.project(self.board)
+                    print()
+                    if True in l:
+                        return False
+        return True
+
+    def game_over_win(self, white_wins):
+        prompt = ""
+        if white_wins:
+            prompt = """___      ____  ____  ____  _____  _________  ________       ____      ____  _____  ____  _____   ______   
+|_  _|    |_  _||_   ||   _||_   _||  _   _  ||_   __  |     |_  _|    |_  _||_   _||_   \|_   _|.' ____ \  
+  \ \  /\  / /    | |__| |    | |  |_/ | | \_|  | |_ \_|       \ \  /\  / /    | |    |   \ | |  | (___ \_| 
+   \ \/  \/ /     |  __  |    | |      | |      |  _| _         \ \/  \/ /     | |    | |\ \| |   _.____`.  
+    \  /\  /     _| |  | |_  _| |_    _| |_    _| |__/ |         \  /\  /     _| |_  _| |_\   |_ | \____) | 
+     \/  \/     |____||____||_____|  |_____|  |________|          \/  \/     |_____||_____|\____| \______.' """
+        else:
+            prompt = """_____   _____          _        ______  ___  ____        ____      ____  _____  ____  _____   ______   
+|_   _ \ |_   _|        / \     .' ___  ||_  ||_  _|      |_  _|    |_  _||_   _||_   \|_   _|.' ____ \  
+  | |_) |  | |         / _ \   / .'   \_|  | |_/ /          \ \  /\  / /    | |    |   \ | |  | (___ \_| 
+  |  __'.  | |   _    / ___ \  | |         |  __'.           \ \/  \/ /     | |    | |\ \| |   _.____`.  
+ _| |__) |_| |__/ | _/ /   \ \_\ `.___.'\ _| |  \ \_          \  /\  /     _| |_  _| |_\   |_ | \____) | 
+|_______/|________||____| |____|`.____ .'|____||____|          \/  \/     |_____||_____|\____| \______.' """
+
+        api.create_window(self.socket,
+                          x = 1,
+                          y = 1+Tile.size*3,
+                          win_wid = Tile.size*16+50,
+                          win_hgt = Tile.size*2-1,
+                          v_align = "C",
+                          prompt = prompt,
+                          p_txt_col = "K" if white_wins else "W",
+                          win_bg_col = "W" if white_wins else "K",
+                          parent_win = self.controls_win)
+
+
+    # Pre: Game is created and no modifications have been made to the object
     def play(self):
         curr_player_is_white = True
         self.cursor_y = 6;
@@ -184,6 +254,12 @@ class Game:
         projection_tile = False
         proj_piece_loc = [-1,-1] #(x,y)
         while(1):
+            # Reset Cursor
+            print("\033[0m\033[51;1H")
+
+            if self.check_for_mate(curr_player_is_white):
+                self.game_over_win(not curr_player_is_white)
+                break
             key = getkey()
             if   key == keys.UP:
                 if(self.cursor_y <= 0):
@@ -201,13 +277,8 @@ class Game:
                 if(self.cursor_x >= 7):
                     continue
                 projection_tile = self.select("RIGHT")
-#            elif key == 'h':
-                #api.create_window(self.socket, {HELP WINDOW SPECS})
-#            elif key == 'r':
-                #resignation
-#            elif key == 'n':
-                #api.create_window(self.socket, {NOTATION WINDOW SPECS})
-            elif key == 'q':
+            elif key == 'r':
+                self.game_over_win(not curr_player_is_white)
                 break
             elif key == keys.ENTER:
                 # Projection Logic
@@ -224,14 +295,12 @@ class Game:
                 # Movement Logic
                 if self.move_piece(proj_piece_loc[0], proj_piece_loc[1]):
                     proj_piece_loc = [-1,-1]
-                    print(f"\033[0;49m\033[48;1H")
+                    print(f"\033[0m\033[51;1H")
                     curr_player_is_white = not curr_player_is_white
                     self.promote()
                     continue
 
-                # Reset Cursor
-                print(f"\033[0;49m\033[48;1H")
-                
+
     def add_pieces(self, is_white):
         major_row = 7 if is_white else 0
         minor_row = 6 if is_white else 1
@@ -264,7 +333,7 @@ class Game:
  \____/\___/|_| |_|\__|_|  \___/|_|___/
 Press the Arrow Keys to move around
 Press ENTER to select and de-select pieces
-press Q to Quit
+press R to Resign
 """
         return api.create_window(self.socket, 97, 1, 50, 11, "T", "L", s)
 

@@ -19,7 +19,7 @@ class Tile:
         self.first_move  = True
 
     def cursor_to_xy(self, x, y):
-        return "\033[%d;%dH" % (y*self.size+1,
+        return "\033[%d;%dH" % (y*self.size+2,
                                 x*self.size*2+1)
 
     def set_xy(self,  x, y):
